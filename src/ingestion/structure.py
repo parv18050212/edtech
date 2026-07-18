@@ -31,15 +31,35 @@ def parse_contents(contents_text: str) -> list[TocEntry]:
     return entries
 
 
+def _heading_name_pattern(chapter_name: str) -> str:
+    # The TOC and the actual body heading occasionally disagree on "and"
+    # vs "&" (e.g. Science Class 8 chapter 12: TOC says "Introduction to
+    # Acid and Base", the body heading says "Introduction to Acid & Base").
+    # Match either spelling regardless of which one the TOC used. Words are
+    # joined with "[\s*]*" rather than "\s*" because a heading can render
+    # as several adjacent bold spans (e.g. EVS chapter 9: "9. Maps
+    # ****-**** our Companions" splits around the hyphen into three
+    # separate **-wrapped spans), leaving stray runs of "*" between words
+    # that plain whitespace tolerance wouldn't consume.
+    parts = []
+    for word in chapter_name.split():
+        if word.lower() in ("and", "&"):
+            parts.append(r"(?:and|&)")
+        else:
+            parts.append(re.escape(word))
+    return r"[\s*]*".join(parts)
+
+
 def split_into_chapters(full_text: str, toc: list[TocEntry]) -> dict[int, str]:
     matches = []
     for entry in toc:
         pattern = re.compile(
-            r"\*{0,2}\s*"
+            r"[\s*]*"
             + re.escape(f"{entry.chapter_number}.")
-            + r"\s*\*{0,2}\s*"
-            + re.escape(entry.chapter_name)
-            + r"\s*\*{0,2}"
+            + r"[\s*]*"
+            + _heading_name_pattern(entry.chapter_name)
+            + r"[\s*]*",
+            re.IGNORECASE,
         )
         found = pattern.search(full_text)
         if not found:

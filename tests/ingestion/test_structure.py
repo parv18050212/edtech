@@ -69,6 +69,49 @@ def test_split_into_chapters_isolates_each_chapters_body():
     assert "The earth rotates on its axis." in chapters[2]
 
 
+def test_split_into_chapters_matches_heading_case_insensitively():
+    # Real case found in Science Class 8: the TOC lists "Composition of
+    # Matter" but the actual body heading reads "Composition of matter"
+    # (lowercase 'm') -- a publisher inconsistency, not something we can
+    # assume away.
+    toc = [TocEntry(6, "Composition of Matter", 39)]
+    full_text = (
+        "**6. Composition of matter**\n"
+        "What are the various states of matter?\n"
+    )
+    chapters = split_into_chapters(full_text, toc)
+    assert "What are the various states of matter?" in chapters[6]
+
+
+def test_split_into_chapters_matches_ampersand_for_and():
+    # Real case found in Science Class 8: the TOC lists "Introduction to
+    # Acid and Base" but the actual body heading reads "Introduction to
+    # Acid & Base" -- another publisher inconsistency between the TOC and
+    # body text.
+    toc = [TocEntry(12, "Introduction to Acid and Base", 83)]
+    full_text = (
+        "**12. Introduction to Acid & Base**\n"
+        "You will notice that some substances have sweet taste.\n"
+    )
+    chapters = split_into_chapters(full_text, toc)
+    assert "You will notice that some substances have sweet taste." in chapters[12]
+
+
+def test_split_into_chapters_tolerates_fragmented_heading_bold_spans():
+    # Real case found in Class 5 EVS: the body heading for chapter 9 renders
+    # as three separate adjacent bold spans split around the hyphen --
+    # "**9. Maps ****-**** our Companions**" -- the same class of PyMuPDF
+    # span-fragmentation issue already handled for TOC parsing, but this
+    # time inside a chapter heading itself.
+    toc = [TocEntry(9, "Maps - our Companions", 39)]
+    full_text = (
+        "**9. Maps ****-**** our Companions**\n"
+        "The landscape around us is made up of many features.\n"
+    )
+    chapters = split_into_chapters(full_text, toc)
+    assert "The landscape around us is made up of many features." in chapters[9]
+
+
 def test_split_into_chapters_raises_if_heading_not_found():
     toc = [TocEntry(1, "A Chapter That Does Not Exist", 1)]
     with pytest.raises(ValueError):
