@@ -7,17 +7,24 @@ Uses reference-free metrics so no hand-labelled answers are needed:
   - llm_context_precision_without_reference: are the retrieved chunks
     relevant to the question (retrieval quality)?
 
-Judge LLM: Groq llama-3.3-70b-versatile (via its OpenAI-compatible API).
+Generation + judge LLM: local Ollama llama3.1:8b (via Ollama's
+OpenAI-compatible endpoint) -- fully local, no API rate limits.
 Embeddings: the same local Ollama embeddinggemma used for ingestion.
+
+Note: this measures the RAG pipeline with the LOCAL 8B model as the
+generator, not the Groq 70B production chat path. It's a local, free,
+rate-limit-free way to validate the retrieval + generation mechanics.
 """
 
 import os
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 import psycopg2
+import requests
 from dotenv import load_dotenv
 from langchain_core.embeddings import Embeddings
 from langchain_openai import ChatOpenAI
@@ -32,14 +39,29 @@ from ragas.metrics import (
 )
 from ragas.run_config import RunConfig
 
-from api.groq_client import call_groq
 from api.retrieval import search_chunks
 from api.routes.chat import EXPLANATION_PROMPT_TEMPLATE
 from ingestion.embed import embed_prompts, embed_query
 
 load_dotenv()
 
-CHAT_MODEL = "llama-3.3-70b-versatile"
+# Local Ollama model used for BOTH generation and RAGAS judging.
+LOCAL_MODEL = "llama3.1:8b"
+OLLAMA_OPENAI_BASE = "http://localhost:11434/v1"
+
+
+def call_local(prompt: str) -> str:
+    response = requests.post(
+        f"{OLLAMA_OPENAI_BASE}/chat/completions",
+        json={
+            "model": LOCAL_MODEL,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0,
+        },
+        timeout=300,
+    )
+    response.raise_for_status()
+    return response.json()["choices"][0]["message"]["content"]
 
 # (subject, class, chapter_number, question) spread across both books and
 # a variety of chapters.
@@ -72,7 +94,7 @@ def build_sample(conn, subject: str, class_: str, chapter_number: int, question:
     prompt = EXPLANATION_PROMPT_TEMPLATE.format(
         context="\n\n".join(contexts), question=question
     )
-    answer = call_groq(prompt, model=CHAT_MODEL)
+    answer = call_local(prompt)
     return SingleTurnSample(
         user_input=question,
         retrieved_contexts=contexts,
@@ -85,8 +107,17 @@ def main():
     try:
         samples = []
         for i, (subject, class_, chapter, question) in enumerate(TEST_CASES, 1):
-            print(f"[{i}/{len(TEST_CASES)}] {subject} ch{chapter}: {question}")
-            samples.append(build_sample(conn, subject, class_, chapter, question))
+            print(f"[{i}/{len(TEST_CASES)}] {subject} ch{chapter}: {question}", flush=True)
+            # Resilience against transient network/DNS blips over a long run.
+            for attempt in range(4):
+                try:
+                    samples.append(build_sample(conn, subject, class_, chapter, question))
+                    break
+                except Exception as exc:  # noqa: BLE001 - retry any transient failure
+                    if attempt == 3:
+                        raise
+                    print(f"    transient error ({type(exc).__name__}), retrying...", flush=True)
+                    time.sleep(5 * (attempt + 1))
     finally:
         conn.close()
 
@@ -94,10 +125,11 @@ def main():
 
     judge_llm = LangchainLLMWrapper(
         ChatOpenAI(
-            model=CHAT_MODEL,
-            base_url="https://api.groq.com/openai/v1",
-            api_key=os.environ["GROQ_API_KEY"],
+            model=LOCAL_MODEL,
+            base_url=OLLAMA_OPENAI_BASE,
+            api_key="ollama",  # ignored by Ollama, but ChatOpenAI requires a value
             temperature=0,
+            timeout=300,
         )
     )
     judge_embeddings = LangchainEmbeddingsWrapper(OllamaGemmaEmbeddings())
@@ -108,13 +140,13 @@ def main():
         LLMContextPrecisionWithoutReference(),
     ]
 
-    print("\nScoring with RAGAS (Groq judge + Ollama embeddings)...\n")
+    print(f"\nScoring with RAGAS (local {LOCAL_MODEL} judge + Ollama embeddings)...\n")
     result = evaluate(
         dataset=dataset,
         metrics=metrics,
         llm=judge_llm,
         embeddings=judge_embeddings,
-        run_config=RunConfig(max_workers=4, timeout=180),
+        run_config=RunConfig(max_workers=2, timeout=300),
         show_progress=True,
     )
 
