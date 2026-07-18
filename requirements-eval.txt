@@ -1,0 +1,11 @@
+# RAG evaluation tooling (RAGAS). Kept separate from requirements.txt
+# because it pulls a heavy langchain stack pinned to 0.3.x -- ragas 0.4.x
+# breaks against the current langchain 1.x (removed
+# langchain_community.chat_models.vertexai, which ragas imports at load).
+# Install with: pip install -r requirements-eval.txt
+ragas==0.2.15
+langchain==0.3.30
+langchain-community==0.3.31
+langchain-core==0.3.86
+langchain-openai==0.3.35
+datasets==5.0.0
