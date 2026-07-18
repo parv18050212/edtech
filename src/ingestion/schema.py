@@ -16,6 +16,7 @@ class ChunkRecord:
     page_start: int
     page_end: int
     chunk_text: str
+    embedding: Optional[list] = None
 
     def to_dict(self) -> dict:
         d = asdict(self)
