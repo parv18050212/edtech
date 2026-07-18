@@ -65,6 +65,7 @@ edtech/
 - Create: `requirements.txt`
 - Create: `pyproject.toml`
 - Create: `src/ingestion/__init__.py`
+- Create: `tests/__init__.py`
 - Create: `tests/ingestion/__init__.py`
 - Create: `data/raw/.gitkeep`, `data/interim/.gitkeep`
 - Move: `Class 5 EVS.pdf` → `data/raw/Class 5 EVS.pdf`
@@ -107,7 +108,7 @@ testpaths = ["tests"]
 
 - [ ] **Step 5: Create empty package markers**
 
-Create `src/ingestion/__init__.py` (empty file) and `tests/ingestion/__init__.py` (empty file).
+Create `src/ingestion/__init__.py`, `tests/__init__.py`, and `tests/ingestion/__init__.py` (all empty files). `tests/__init__.py` is required, not optional: without it, pytest's default import mode treats `tests/ingestion` itself as the top-level `ingestion` package (since it's the first ancestor directory with an `__init__.py`), which collides with and shadows the real `src/ingestion` package in `sys.modules` — every `from ingestion.xxx import ...` in a test then fails with a confusing `ModuleNotFoundError: No module named 'ingestion.xxx'` even though `ingestion` itself imports fine.
 
 - [ ] **Step 6: Install dependencies and verify pytest collects cleanly**
 
