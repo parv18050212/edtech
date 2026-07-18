@@ -62,7 +62,7 @@ edtech/
 **Interfaces:**
 - Produces: `requests`, `psycopg2-binary`, and `python-dotenv` installed in `.venv` and available to every later task; `data/processed/` exists as the output directory for Task 5.
 
-- [ ] **Step 1: Add the new dependencies to `requirements.txt`**
+- [x] **Step 1: Add the new dependencies to `requirements.txt`**
 
 ```
 pymupdf==1.28.0
@@ -72,7 +72,7 @@ psycopg2-binary==2.9.12
 python-dotenv==1.2.2
 ```
 
-- [ ] **Step 2: Install and verify**
+- [x] **Step 2: Install and verify**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pip" install -r requirements.txt
@@ -81,13 +81,13 @@ python-dotenv==1.2.2
 
 Expected: prints `ok` with no import errors.
 
-- [ ] **Step 3: Create `.env.example`**
+- [x] **Step 3: Create `.env.example`**
 
 ```
 DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.aedsgktxvmddarqurbhi.supabase.co:5432/postgres
 ```
 
-- [ ] **Step 4: Add `.env` and `data/processed/` to `.gitignore`**
+- [x] **Step 4: Add `.env` and `data/processed/` to `.gitignore`**
 
 Append to the existing `.gitignore`:
 
@@ -96,11 +96,11 @@ Append to the existing `.gitignore`:
 data/processed/
 ```
 
-- [ ] **Step 5: Create `data/processed/.gitkeep`**
+- [x] **Step 5: Create `data/processed/.gitkeep`**
 
 Empty file, so the directory structure is visible even though its contents are gitignored.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add requirements.txt .gitignore .env.example data/processed/.gitkeep
@@ -121,7 +121,7 @@ Note: do NOT create the real `.env` file as part of this commit — that happens
 - Consumes: existing `ChunkRecord` (Task 2 of the previous plan).
 - Produces: `ChunkRecord.embedding: Optional[list[float]] = None`, included in `to_dict()` output under the key `"embedding"`. Used by `run_full_pipeline.py` (Task 5) to attach vectors after chunking, and by `db.py` (Task 7) to read them back out via `to_dict()`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add to `tests/ingestion/test_schema.py`:
 
@@ -164,7 +164,7 @@ def test_to_dict_embedding_defaults_to_none():
     assert record.to_dict()["embedding"] is None
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/ingestion/test_schema.py -v
@@ -172,7 +172,7 @@ def test_to_dict_embedding_defaults_to_none():
 
 Expected: FAIL — `record.embedding = [0.1, 0.2, 0.3]` raises no error (dataclasses allow arbitrary attribute assignment by default... actually it will raise `AttributeError`-free assignment but the field won't exist, so `to_dict()` (which uses `dataclasses.asdict`) will not include it, and `d["embedding"]` raises `KeyError`).
 
-- [ ] **Step 3: Add the field**
+- [x] **Step 3: Add the field**
 
 In `src/ingestion/schema.py`, add `embedding: Optional[list] = None` as the last field of `ChunkRecord` (after `chunk_text`):
 
@@ -199,7 +199,7 @@ class ChunkRecord:
         return d
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/ingestion/test_schema.py -v
@@ -207,7 +207,7 @@ class ChunkRecord:
 
 Expected: 4 passed (2 existing + 2 new).
 
-- [ ] **Step 5: Run the full suite to confirm no regressions**
+- [x] **Step 5: Run the full suite to confirm no regressions**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" -v
@@ -215,7 +215,7 @@ Expected: 4 passed (2 existing + 2 new).
 
 Expected: all previously-passing tests (54 as of the last plan) still pass, plus the 2 new ones.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/ingestion/schema.py tests/ingestion/test_schema.py
@@ -236,7 +236,7 @@ git commit -m "feat: add optional embedding field to ChunkRecord"
 
 **Note:** the `embed_texts` tests call the real local Ollama server (consistent with how `test_extract.py` calls the real PDFs) — Ollama must be running with `embeddinggemma` pulled, which is already true in this environment.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```python
 # tests/ingestion/test_embed.py
@@ -280,7 +280,7 @@ def test_embed_texts_handles_none_title():
     assert len(embeddings[0]) == 768
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/ingestion/test_embed.py -v
@@ -288,7 +288,7 @@ def test_embed_texts_handles_none_title():
 
 Expected: FAIL with `ModuleNotFoundError: No module named 'ingestion.embed'`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```python
 # src/ingestion/embed.py
@@ -323,7 +323,7 @@ def embed_texts(
     return response.json()["embeddings"]
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/ingestion/test_embed.py -v
@@ -331,7 +331,7 @@ def embed_texts(
 
 Expected: 5 passed. If any test fails with a connection error, confirm Ollama is running: `"/c/Users/parva/AppData/Local/Programs/Ollama/ollama.exe" list` should show `embeddinggemma`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/ingestion/embed.py tests/ingestion/test_embed.py
@@ -351,7 +351,7 @@ git commit -m "feat: add Ollama embedding client for embeddinggemma"
 
 **Note:** this test may pass immediately without any code change — that is expected and fine. It exists to catch a real risk (the TOC/body collision) at full-book scale before Task 5 depends on it, not to drive new behavior. If it fails, that is real signal requiring a fix to `structure.py` before proceeding.
 
-- [ ] **Step 1: Write the test**
+- [x] **Step 1: Write the test**
 
 ```python
 # tests/ingestion/test_full_book_extraction.py
@@ -394,7 +394,7 @@ def test_science_full_book_splits_into_all_19_chapters():
         assert text.strip(), f"Chapter {chapter_number} body is empty"
 ```
 
-- [ ] **Step 2: Run it**
+- [x] **Step 2: Run it**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/ingestion/test_full_book_extraction.py -v
@@ -404,7 +404,7 @@ Expected: 2 passed. This may take 10-20 seconds since it extracts ~138 pages per
 
 **If it fails:** read the `ValueError` message from `split_into_chapters` (it names which chapter's heading couldn't be found) and inspect that chapter's extracted text directly (e.g. via a throwaway `python -c` script calling `extract_pages` on a narrower page range around where that chapter should be) to find the actual formatting difference before changing `structure.py`. Do not guess at a fix — confirm the actual extracted text first, the same way earlier bugs in this project were diagnosed.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/ingestion/test_full_book_extraction.py
@@ -422,7 +422,7 @@ git commit -m "test: add full-book chapter-count regression guard"
 - Consumes: `extract_pages` (existing), `clean_text` (existing), `parse_contents`/`split_into_chapters`/`segment_chapter` (existing), `BookMeta`/`build_chunk_records` (existing), `embed_texts` (Task 3), `ChunkRecord.embedding`/`to_dict()` (Task 2).
 - Produces: `data/processed/EVS_5_full.jsonl` and `data/processed/SCI_8_full.jsonl`, each one JSON object per line (chunk fields + `embedding`). Used by `load_to_supabase.py` (Task 7).
 
-- [ ] **Step 1: Write `scripts/run_full_pipeline.py`**
+- [x] **Step 1: Write `scripts/run_full_pipeline.py`**
 
 ```python
 # scripts/run_full_pipeline.py
@@ -532,7 +532,7 @@ if __name__ == "__main__":
     main()
 ```
 
-- [ ] **Step 2: Run it**
+- [x] **Step 2: Run it**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/python" scripts/run_full_pipeline.py
@@ -540,7 +540,7 @@ if __name__ == "__main__":
 
 Expected: prints per-chapter chunk counts for all 25 EVS chapters and all 19 Science chapters, then a final total per book, with no `AssertionError`. This will take several minutes (CPU-bound Ollama inference across ~1,500+ chunks) — let it run to completion.
 
-- [ ] **Step 3: Spot-check the output**
+- [x] **Step 3: Spot-check the output**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/python" -c "
@@ -556,7 +556,7 @@ for name in ['EVS_5_full.jsonl', 'SCI_8_full.jsonl']:
 
 Expected: `EVS_5_full.jsonl chunks: <N> chapters covered: 25` and `SCI_8_full.jsonl chunks: <M> chapters covered: 19`, with no `AssertionError` from the embedding-length check.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add scripts/run_full_pipeline.py
@@ -575,7 +575,7 @@ Note: `data/processed/*.jsonl` stays untracked (gitignored per Task 1) — only 
 **Interfaces:**
 - Produces: a `chunks` table in the `aedsgktxvmddarqurbhi` Supabase project with an HNSW index on `embedding`. Used by `load_to_supabase.py` (Task 7).
 
-- [ ] **Step 1: Write the migration file**
+- [x] **Step 1: Write the migration file**
 
 ```sql
 -- supabase/migrations/0001_create_chunks_table.sql
@@ -601,17 +601,17 @@ create table chunks (
 create index on chunks using hnsw (embedding vector_cosine_ops);
 ```
 
-- [ ] **Step 2: Apply the migration**
+- [x] **Step 2: Apply the migration**
 
 Use the Supabase MCP tool `apply_migration` with `project_id="aedsgktxvmddarqurbhi"`, `name="create_chunks_table"`, and the SQL contents above.
 
-- [ ] **Step 3: Verify**
+- [x] **Step 3: Verify**
 
 Use the Supabase MCP tool `list_tables` with `project_id="aedsgktxvmddarqurbhi"`, `schemas=["public"]`, `verbose=true`. Expected: `chunks` table listed with all 13 columns above, `embedding` typed as `vector`.
 
 Use the Supabase MCP tool `list_extensions` with `project_id="aedsgktxvmddarqurbhi"`. Expected: the `vector` extension entry now has a non-null `installed_version`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add supabase/migrations/0001_create_chunks_table.sql
@@ -631,7 +631,7 @@ git commit -m "feat: add pgvector chunks table migration"
 - Consumes: JSONL records produced by `run_full_pipeline.py` (Task 5), the `chunks` table from Task 6.
 - Produces: `row_from_record(d: dict) -> tuple` and the SQL constants `INSERT_SQL`, `INSERT_TEMPLATE`, all in `src/ingestion/db.py`. `scripts/load_to_supabase.py` is the orchestration entrypoint — not imported anywhere, verified by running it for real.
 
-- [ ] **Step 1: Write the failing test for `row_from_record`**
+- [x] **Step 1: Write the failing test for `row_from_record`**
 
 ```python
 # tests/ingestion/test_db.py
@@ -692,7 +692,7 @@ def test_row_from_record_handles_null_topic():
     assert row[7] is None
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/ingestion/test_db.py -v
@@ -700,7 +700,7 @@ def test_row_from_record_handles_null_topic():
 
 Expected: FAIL with `ModuleNotFoundError: No module named 'ingestion.db'`.
 
-- [ ] **Step 3: Write `src/ingestion/db.py`**
+- [x] **Step 3: Write `src/ingestion/db.py`**
 
 ```python
 # src/ingestion/db.py
@@ -734,7 +734,7 @@ def row_from_record(d: dict) -> tuple:
     )
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/ingestion/test_db.py -v
@@ -742,7 +742,7 @@ def row_from_record(d: dict) -> tuple:
 
 Expected: 2 passed.
 
-- [ ] **Step 5: Write `scripts/load_to_supabase.py`**
+- [x] **Step 5: Write `scripts/load_to_supabase.py`**
 
 ```python
 # scripts/load_to_supabase.py
@@ -796,11 +796,11 @@ if __name__ == "__main__":
     main()
 ```
 
-- [ ] **Step 6: Confirm `.env` is filled in**
+- [x] **Step 6: Confirm `.env` is filled in**
 
 Ask the user to confirm their real `DATABASE_URL` is set in their local `.env` file (from Task 1's `.env.example`) before proceeding — this step cannot be automated or verified by reading the file's contents (the value must not be echoed into the conversation).
 
-- [ ] **Step 7: Run it**
+- [x] **Step 7: Run it**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/python" scripts/load_to_supabase.py
@@ -808,7 +808,7 @@ Ask the user to confirm their real `DATABASE_URL` is set in their local `.env` f
 
 Expected: prints `EVS_5_full.jsonl: loaded <N> rows`, `SCI_8_full.jsonl: loaded <M> rows`, and `Total: <N+M> rows`, with no connection or SQL errors.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/ingestion/db.py tests/ingestion/test_db.py scripts/load_to_supabase.py
@@ -823,11 +823,11 @@ git commit -m "feat: add pgvector bulk loader"
 
 **Interfaces:** none — this task confirms Tasks 5-7 together produced a correct end state.
 
-- [ ] **Step 1: Verify row count matches the JSONL output**
+- [x] **Step 1: Verify row count matches the JSONL output**
 
 Use the Supabase MCP tool `execute_sql` with `project_id="aedsgktxvmddarqurbhi"` and query `select count(*) from chunks;`. Compare against the total printed by `load_to_supabase.py` in Task 7 Step 7 — they must match exactly (the `on conflict (chunk_id) do nothing` clause means a partial rerun would under-count, so a mismatch here is real signal, not noise).
 
-- [ ] **Step 2: Spot-check a handful of rows**
+- [x] **Step 2: Spot-check a handful of rows**
 
 Use `execute_sql` with:
 
@@ -840,7 +840,7 @@ limit 5;
 
 Expected: 5 rows with plausible-looking metadata (real chapter names/topics, `dims` always `768`), across both subjects.
 
-- [ ] **Step 3: Verify per-chapter coverage**
+- [x] **Step 3: Verify per-chapter coverage**
 
 ```sql
 select subject, count(distinct chapter_number) as chapters_covered
@@ -850,7 +850,7 @@ group by subject;
 
 Expected: `Environmental Studies` → 25, `Science` → 19 — matching the chapter counts confirmed in Task 4.
 
-- [ ] **Step 4: Report results to the user**
+- [x] **Step 4: Report results to the user**
 
 Summarize total row count, per-book chunk counts, and confirm the vector index and chapter coverage are correct. No further commit needed for this task — it's read-only verification.
 
