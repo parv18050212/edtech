@@ -94,3 +94,91 @@ def classify_bold_span(text: str) -> tuple[str, str]:
         return ("topic", label)
 
     return ("emphasis", stripped)
+
+
+TOKEN_RE = re.compile(r"\[\[PAGE:(\d+)\]\]|\*\*(.+?)\*\*")
+
+
+@dataclass
+class Block:
+    chunk_type: str
+    text: str
+    page_start: int
+    page_end: int
+
+
+@dataclass
+class TopicSegment:
+    topic: Optional[str]
+    blocks: list
+
+
+def segment_chapter(chapter_text: str) -> list:
+    segments: list[TopicSegment] = []
+    current_topic: Optional[str] = None
+    current_blocks: list[Block] = []
+    current_type = "paragraph"
+    current_text_parts: list[str] = []
+    current_page = 0
+    block_start_page = 0
+    block_end_page = 0
+    pos = 0
+
+    def flush_block():
+        nonlocal current_text_parts, current_type
+        text = re.sub(r"\s+", " ", "".join(current_text_parts)).strip()
+        if text:
+            current_blocks.append(
+                Block(current_type, text, block_start_page, block_end_page)
+            )
+        current_text_parts = []
+        current_type = "paragraph"
+
+    def flush_segment():
+        nonlocal current_blocks
+        if current_blocks:
+            segments.append(TopicSegment(current_topic, current_blocks))
+        current_blocks = []
+
+    for match in TOKEN_RE.finditer(chapter_text):
+        plain_before = chapter_text[pos : match.start()]
+        if plain_before.strip():
+            if not current_text_parts:
+                block_start_page = current_page
+            current_text_parts.append(plain_before)
+            block_end_page = current_page
+        pos = match.end()
+
+        page_group, bold_group = match.group(1), match.group(2)
+        if page_group is not None:
+            current_page = int(page_group)
+            continue
+
+        kind, value = classify_bold_span(bold_group)
+        if kind == "topic":
+            flush_block()
+            flush_segment()
+            current_topic = value
+            block_start_page = current_page
+            block_end_page = current_page
+        elif kind == "marker":
+            flush_block()
+            current_type = value
+            block_start_page = current_page
+            block_end_page = current_page
+        else:  # emphasis: keep the plain text inline
+            if not current_text_parts:
+                block_start_page = current_page
+            current_text_parts.append(value)
+            block_end_page = current_page
+
+    trailing = chapter_text[pos:]
+    if trailing.strip():
+        if not current_text_parts:
+            block_start_page = current_page
+        current_text_parts.append(trailing)
+        block_end_page = current_page
+
+    flush_block()
+    flush_segment()
+    return segments

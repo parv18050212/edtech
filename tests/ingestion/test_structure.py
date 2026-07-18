@@ -4,6 +4,7 @@ from ingestion.structure import (
     TocEntry,
     classify_bold_span,
     parse_contents,
+    segment_chapter,
     split_into_chapters,
 )
 
@@ -89,3 +90,46 @@ def test_split_into_chapters_raises_if_heading_not_found():
 )
 def test_classify_bold_span(bold_text, expected):
     assert classify_bold_span(bold_text) == expected
+
+
+def test_segment_chapter_splits_on_topics_and_markers():
+    chapter_text = (
+        "[[PAGE:10]]\n"
+        "When we look up we see the sky. It has many stars.\n"
+        "**Stars :** The heavenly bodies that twinkle are called stars.\n"
+        "**2. Use your brain power !**\n"
+        "Name two heavenly bodies that do not twinkle.\n"
+        "[[PAGE:11]]\n"
+        "**Planets :** Planets do not have light of their own.\n"
+    )
+    segments = segment_chapter(chapter_text)
+
+    assert segments[0].topic is None
+    assert segments[0].blocks[0].chunk_type == "paragraph"
+    assert "many stars" in segments[0].blocks[0].text
+    assert segments[0].blocks[0].page_start == 10
+    assert segments[0].blocks[0].page_end == 10
+
+    assert segments[1].topic == "Stars"
+    assert segments[1].blocks[0].chunk_type == "paragraph"
+    assert "heavenly bodies that twinkle" in segments[1].blocks[0].text
+    assert segments[1].blocks[1].chunk_type == "activity"
+    assert "do not twinkle" in segments[1].blocks[1].text
+
+    assert segments[2].topic == "Planets"
+    assert segments[2].blocks[0].page_start == 11
+    assert "light of their own" in segments[2].blocks[0].text
+
+
+def test_segment_chapter_keeps_emphasis_inline():
+    # A bold run longer than 6 words falls through classify_bold_span's
+    # topic heuristic to "emphasis", so it must stay inline as plain text
+    # rather than starting a new topic segment.
+    chapter_text = (
+        "[[PAGE:5]]\n"
+        "The fox jumped over **a fence that was much too tall for it to clear** easily.\n"
+    )
+    segments = segment_chapter(chapter_text)
+    assert segments[0].blocks[0].text == (
+        "The fox jumped over a fence that was much too tall for it to clear easily."
+    )
