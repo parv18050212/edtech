@@ -3,8 +3,10 @@ from dataclasses import dataclass
 from typing import Optional
 
 TOC_ENTRY_RE = re.compile(
-    r"\*{0,2}\s*(\d{1,2})\.\*{0,2}\s*\*{0,2}\s*(.+?)\*{0,2}\s*\.{2,}\s*\*{0,2}\s*(\d{1,3})\*{0,2}"
+    r"[\s*]*(\d{1,2})\.[\s*]*(.+?)[\s*]*\.{2,}[\s*]*(\d{1,3})[\s*]*"
 )
+
+PAGE_MARKER_RE = re.compile(r"\[\[PAGE:\d+\]\]")
 
 
 @dataclass
@@ -18,7 +20,12 @@ def parse_contents(contents_text: str) -> list[TocEntry]:
     entries = []
     for match in TOC_ENTRY_RE.finditer(contents_text):
         number = int(match.group(1))
-        name = re.sub(r"\s+", " ", match.group(2)).strip()
+        # The TOC page can render "N." and the title as separate adjacent
+        # bold spans (each independently **-wrapped by extract.py), so the
+        # lazily-captured name can contain stray '*' runs at the seams
+        # between spans (e.g. "**** ****Living World..."). Strip them.
+        name = re.sub(r"\*+", "", match.group(2))
+        name = re.sub(r"\s+", " ", name).strip()
         start_page = int(match.group(3))
         entries.append(TocEntry(number, name, start_page))
     return entries
@@ -44,9 +51,16 @@ def split_into_chapters(full_text: str, toc: list[TocEntry]) -> dict[int, str]:
 
     matches.sort(key=lambda m: m[1])
     chapters: dict[int, str] = {}
-    for i, (chapter_number, _start, end) in enumerate(matches):
+    for i, (chapter_number, start, end) in enumerate(matches):
         next_start = matches[i + 1][1] if i + 1 < len(matches) else len(full_text)
-        chapters[chapter_number] = full_text[end:next_start]
+        # The heading's own page marker (e.g. "[[PAGE:10]]") appears BEFORE
+        # the heading text in full_text, so slicing from `end` would silently
+        # drop it -- leaving segment_chapter with no page context for the
+        # chapter's opening content. Recover the most recent page marker
+        # before the heading and prepend it to the slice.
+        preceding_pages = list(PAGE_MARKER_RE.finditer(full_text[:start]))
+        prefix = preceding_pages[-1].group(0) + "\n" if preceding_pages else ""
+        chapters[chapter_number] = prefix + full_text[end:next_start]
     return chapters
 
 
@@ -69,6 +83,10 @@ BLOCK_MARKER_PREFIXES: dict[str, list[str]] = {
 
 def _normalize_marker(text: str) -> str:
     normalized = text.strip()
+    # These textbooks use a Unicode right single quotation mark (U+2019) as
+    # their apostrophe, not ASCII "'" -- normalize to ASCII so prefixes like
+    # "what's the solution" match regardless of which one the PDF used.
+    normalized = normalized.replace("’", "'")
     normalized = re.sub(r"^\d+\.\s*", "", normalized)
     normalized = re.sub(r"\s+", " ", normalized)
     normalized = normalized.strip(".! ?")

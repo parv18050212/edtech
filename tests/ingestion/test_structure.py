@@ -41,6 +41,17 @@ def test_parse_contents_tolerates_bold_markers():
     assert entries[0] == TocEntry(1, "Our Earth and Our Solar System", 1)
 
 
+def test_parse_contents_tolerates_fragmented_adjacent_bold_spans():
+    # Real extracted text from Science Class 8's TOC page: the "N." prefix,
+    # a bold tab-only span, and the title render as three separate adjacent
+    # bold spans, producing runs of 4+ asterisks at the seams.
+    text = "**1. \t**** ****Living World and Classification of Microbes**............. 1"
+    entries = parse_contents(text)
+    assert entries[0] == TocEntry(
+        1, "Living World and Classification of Microbes", 1
+    )
+
+
 def test_split_into_chapters_isolates_each_chapters_body():
     toc = [
         TocEntry(1, "Our Earth and Our Solar System", 1),
@@ -62,6 +73,21 @@ def test_split_into_chapters_raises_if_heading_not_found():
     toc = [TocEntry(1, "A Chapter That Does Not Exist", 1)]
     with pytest.raises(ValueError):
         split_into_chapters("no matching heading here", toc)
+
+
+def test_split_into_chapters_recovers_page_marker_preceding_the_heading():
+    # extract_pages() puts the page marker BEFORE that page's blocks, so the
+    # heading's own page marker sits before the heading text -- slicing from
+    # the end of the heading match must not lose it, or every chunk on the
+    # chapter's opening page ends up with no page number at all.
+    toc = [TocEntry(1, "Our Earth and Our Solar System", 1)]
+    full_text = (
+        "[[PAGE:10]]\n"
+        "**1. Our Earth and Our Solar System**\n"
+        "The sun and the moon are close to earth.\n"
+    )
+    chapters = split_into_chapters(full_text, toc)
+    assert chapters[1].startswith("[[PAGE:10]]")
 
 
 @pytest.mark.parametrize(
@@ -90,6 +116,13 @@ def test_split_into_chapters_raises_if_heading_not_found():
 )
 def test_classify_bold_span(bold_text, expected):
     assert classify_bold_span(bold_text) == expected
+
+
+def test_classify_bold_span_handles_curly_apostrophe():
+    # The source PDFs use U+2019 (curly apostrophe) as their apostrophe
+    # character, not ASCII "'".
+    assert classify_bold_span("What’s the solution ?") == ("marker", "exercise")
+    assert classify_bold_span("Let’s try this") == ("marker", "activity")
 
 
 def test_segment_chapter_splits_on_topics_and_markers():
