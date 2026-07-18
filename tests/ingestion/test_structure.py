@@ -1,6 +1,11 @@
 import pytest
 
-from ingestion.structure import TocEntry, parse_contents, split_into_chapters
+from ingestion.structure import (
+    TocEntry,
+    classify_bold_span,
+    parse_contents,
+    split_into_chapters,
+)
 
 EVS_TOC_TEXT = (
     "1. Our Earth and Our Solar System .......................................................... 1 "
@@ -56,3 +61,31 @@ def test_split_into_chapters_raises_if_heading_not_found():
     toc = [TocEntry(1, "A Chapter That Does Not Exist", 1)]
     with pytest.raises(ValueError):
         split_into_chapters("no matching heading here", toc)
+
+
+@pytest.mark.parametrize(
+    "bold_text,expected",
+    [
+        ("1.1 Five Kingdom system of classification", ("topic", "1.1 Five Kingdom system of classification")),
+        ("Stars :", ("topic", "Stars")),
+        ("Gravity", ("topic", "Gravity")),
+        ("Dwarf planets", ("topic", "Dwarf planets")),
+        ("2. Use your brain power !", ("marker", "activity")),
+        ("Try this.", ("marker", "activity")),
+        ("Can you tell  ?", ("marker", "activity")),
+        ("Can you recall?", ("marker", "recall")),
+        ("Do you know  ?", ("marker", "info_box")),
+        ("Find out my partner.", ("marker", "info_box")),
+        ("In History......", ("marker", "info_box")),
+        ("Always remember", ("marker", "info_box")),
+        ("5. \tFill in the blanks.", ("marker", "exercise")),
+        ("1. Answer the following in your own words.", ("marker", "exercise")),
+        ("State true or false.", ("marker", "exercise")),
+        (
+            "This is a much longer bold phrase used only for testing purposes",
+            ("emphasis", "This is a much longer bold phrase used only for testing purposes"),
+        ),
+    ],
+)
+def test_classify_bold_span(bold_text, expected):
+    assert classify_bold_span(bold_text) == expected
