@@ -99,3 +99,37 @@ token (filtering out single-word/photo-caption fragments like `"X"` or
 reading-order limitation (finding #1) is accepted as a known constraint of
 the rule-based approach, per the design spec — not something to chase
 further here.
+
+## Follow-up: topic heuristic tightened
+
+`classify_bold_span`'s topic fallback now also requires the candidate
+label to contain at least 2 alphabetic characters, with the first one
+uppercase (`_looks_like_topic_label`, `src/ingestion/structure.py`). This
+targets the specific failure mode found above — real headers in these
+textbooks always start with a capital letter or a digit and contain a real
+word; caption fragments and stray characters don't.
+
+Rerunning the pilot after the fix: all previously-flagged junk topics are
+gone — `'X'`, `'-'`, `'t'`, `'a man-made satellite'`, `'taken by
+Mangalyaan'`, and `'fungi.'` no longer appear anywhere in either book's
+output (verified directly, not just by the 6 new regression tests added
+for these exact strings). Chunk counts shifted slightly (EVS 33→34,
+Science 36→38) as a side effect: text that used to spuriously start a new
+topic segment now flows as inline text within the surrounding paragraph
+instead, which is the intended behavior, not a regression.
+
+A few borderline caption-like fragments remain — e.g. `'(Dwarf'` and `'The
+moon as seen'` — because they start with an uppercase letter and have
+enough alphabetic content to pass the tightened check, even though they're
+still caption fragments rather than real topic headers. This is an
+inherent limit of a purely local (no-lookahead) heuristic: it can't
+distinguish a genuinely capitalized topic label from a capitalized caption
+fragment without understanding the surrounding content. Given the clear,
+frequent junk cases are now eliminated and the remaining cases are
+occasional and lower-impact, this is an acceptable residual limitation
+rather than a blocker.
+
+**Updated recommendation: go for the full 44-chapter rollout**, with the
+remaining caption-fragment edge cases and the reading-order limitation
+(finding #1) both accepted as known, documented constraints rather than
+things to chase further before scaling.

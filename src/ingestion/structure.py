@@ -93,6 +93,13 @@ def _normalize_marker(text: str) -> str:
     return normalized.lower()
 
 
+def _looks_like_topic_label(text: str) -> bool:
+    letters = [c for c in text if c.isalpha()]
+    if len(letters) < 2:
+        return False
+    return letters[0].isupper()
+
+
 def classify_bold_span(text: str) -> tuple[str, str]:
     stripped = text.strip()
 
@@ -107,7 +114,7 @@ def classify_bold_span(text: str) -> tuple[str, str]:
                 return ("marker", chunk_type)
 
     word_count = len(normalized.split())
-    if 0 < word_count <= 6:
+    if 0 < word_count <= 6 and _looks_like_topic_label(stripped):
         label = stripped.rstrip(": ").strip()
         return ("topic", label)
 

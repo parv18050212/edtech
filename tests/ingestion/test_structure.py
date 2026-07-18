@@ -125,6 +125,43 @@ def test_classify_bold_span_handles_curly_apostrophe():
     assert classify_bold_span("Let’s try this") == ("marker", "activity")
 
 
+@pytest.mark.parametrize(
+    "bold_text",
+    [
+        "-",  # bare punctuation, no letters at all
+        "t",  # single letter, likely a rendering artifact
+        "X",  # single letter
+        "a man-made satellite",  # lowercase-starting caption fragment
+        "taken by Mangalyaan",  # lowercase-starting caption fragment
+        "fungi.",  # lowercase-starting sentence-ending fragment
+    ],
+)
+def test_classify_bold_span_rejects_non_topic_fragments(bold_text):
+    # These are all real misfires found during the Chapter 1 pilot review
+    # (data/interim/REVIEW.md): short bold fragments that satisfy the old
+    # <=6-word heuristic but aren't real topic headers. Real headers in
+    # these textbooks always start with a capital letter or a digit and
+    # contain at least one real word.
+    assert classify_bold_span(bold_text) == ("emphasis", bold_text)
+
+
+@pytest.mark.parametrize(
+    "bold_text,expected_label",
+    [
+        ("Mangalyaan", "Mangalyaan"),
+        ("Satellites", "Satellites"),
+        ("1. Bacteria", "1. Bacteria"),
+        ("3.Fungi-", "3.Fungi-"),
+    ],
+)
+def test_classify_bold_span_still_accepts_real_topic_labels(bold_text, expected_label):
+    # Regression guard: the tightened heuristic must not reject legitimate
+    # short topic headers, including ones that start with a digit (numbered
+    # sub-topic lists like "1. Bacteria", "2. Protozoa" seen in the Science
+    # book pilot output).
+    assert classify_bold_span(bold_text) == ("topic", expected_label)
+
+
 def test_segment_chapter_splits_on_topics_and_markers():
     chapter_text = (
         "[[PAGE:10]]\n"
