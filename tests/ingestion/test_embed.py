@@ -1,4 +1,10 @@
-from ingestion.embed import build_document_prompt, embed_texts
+from ingestion.embed import (
+    build_document_prompt,
+    build_query_prompt,
+    embed_prompts,
+    embed_query,
+    embed_texts,
+)
 
 
 def test_build_document_prompt_with_title():
@@ -35,4 +41,31 @@ def test_embed_texts_produces_different_vectors_for_different_text():
 
 def test_embed_texts_handles_none_title():
     embeddings = embed_texts(["Some content with no topic."], titles=[None])
+    assert len(embeddings[0]) == 768
+
+
+def test_build_query_prompt():
+    assert (
+        build_query_prompt("What is a star?")
+        == "task: search result | query: What is a star?"
+    )
+
+
+def test_embed_prompts_returns_768_dim_vectors():
+    embeddings = embed_prompts(["title: none | text: The sun is a star."])
+    assert len(embeddings) == 1
+    assert len(embeddings[0]) == 768
+
+
+def test_embed_query_returns_single_768_dim_vector():
+    embedding = embed_query("What is a star?")
+    assert len(embedding) == 768
+
+
+def test_embed_texts_still_works_after_refactor():
+    # Regression guard: embed_texts's existing public behavior (used by
+    # scripts/run_full_pipeline.py) must be unchanged by factoring out
+    # embed_prompts.
+    embeddings = embed_texts(["The sun is a star."], titles=["Stars"])
+    assert len(embeddings) == 1
     assert len(embeddings[0]) == 768

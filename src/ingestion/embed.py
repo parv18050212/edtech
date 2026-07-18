@@ -11,6 +11,24 @@ def build_document_prompt(text: str, title: Optional[str]) -> str:
     return f"title: {title_value} | text: {text}"
 
 
+def build_query_prompt(text: str) -> str:
+    return f"task: search result | query: {text}"
+
+
+def embed_prompts(
+    prompts: list[str],
+    model: str = DEFAULT_MODEL,
+    host: str = DEFAULT_HOST,
+) -> list[list[float]]:
+    response = requests.post(
+        f"{host}/api/embed",
+        json={"model": model, "input": prompts},
+        timeout=120,
+    )
+    response.raise_for_status()
+    return response.json()["embeddings"]
+
+
 def embed_texts(
     texts: list[str],
     titles: list[Optional[str]],
@@ -20,10 +38,10 @@ def embed_texts(
     prompts = [
         build_document_prompt(text, title) for text, title in zip(texts, titles)
     ]
-    response = requests.post(
-        f"{host}/api/embed",
-        json={"model": model, "input": prompts},
-        timeout=120,
-    )
-    response.raise_for_status()
-    return response.json()["embeddings"]
+    return embed_prompts(prompts, model=model, host=host)
+
+
+def embed_query(
+    text: str, model: str = DEFAULT_MODEL, host: str = DEFAULT_HOST
+) -> list[float]:
+    return embed_prompts([build_query_prompt(text)], model=model, host=host)[0]
