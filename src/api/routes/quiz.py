@@ -3,7 +3,7 @@ import json
 from fastapi import APIRouter, Depends
 
 from api.auth import get_current_user_id
-from api.db import get_db
+from api.db import get_connection
 from api.groq_client import call_groq_json_schema
 from api.schemas import QuizRequest, QuizResponse, QuizSubmitRequest
 
@@ -39,7 +39,7 @@ QUIZ_SCHEMA = {
 
 @router.post("/chapters/{chapter_number}/quiz", response_model=QuizResponse)
 def generate_quiz(chapter_number: int, request: QuizRequest, user_id: str = Depends(get_current_user_id)):
-    conn = next(get_db())
+    conn = get_connection()
     try:
         with conn.cursor() as cur:
             cur.execute(
@@ -74,7 +74,7 @@ def submit_quiz(request: QuizSubmitRequest, user_id: str = Depends(get_current_u
         if correct_answers.get(question) == answer
     )
 
-    conn = next(get_db())
+    conn = get_connection()
     try:
         with conn.cursor() as cur:
             cur.execute(

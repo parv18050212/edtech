@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from api.auth import get_current_user_id
-from api.db import get_db
+from api.db import get_connection
 
 router = APIRouter()
 
@@ -11,7 +11,7 @@ def get_progress(user_id: str, current_user_id: str = Depends(get_current_user_i
     if user_id != current_user_id:
         raise HTTPException(status_code=403, detail="Cannot view another user's progress")
 
-    conn = next(get_db())
+    conn = get_connection()
     try:
         with conn.cursor() as cur:
             cur.execute(

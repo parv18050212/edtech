@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from api.auth import get_current_user_id
-from api.db import get_db
+from api.db import get_connection
 from api.groq_client import call_groq
 from api.retrieval import search_chunks
 from api.schemas import ChatRequest, ChatResponse
@@ -17,7 +17,7 @@ Provide: a simple explanation, one worked example, and one common mistake studen
 
 @router.post("/chapters/{chapter_number}/chat", response_model=ChatResponse)
 def chat(chapter_number: int, request: ChatRequest, user_id: str = Depends(get_current_user_id)):
-    conn = next(get_db())
+    conn = get_connection()
     try:
         query_embedding = embed_query(request.question)
         chunks = search_chunks(
