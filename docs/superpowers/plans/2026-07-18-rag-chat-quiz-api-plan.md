@@ -23,8 +23,12 @@
   during ingestion): `"task: search result | query: {content}"`.
 - New pinned dependencies (versions confirmed installed in this
   environment): `fastapi==0.139.2`, `uvicorn==0.51.0`, `pyjwt[crypto]==2.13.0`
-  (pulls in `cryptography==49.0.0`), `httpx==0.28.1`. `pydantic==2.13.4` is
-  pulled in transitively by FastAPI.
+  (pulls in `cryptography==49.0.0`), `httpx==0.28.1`, `httpx2==2.7.0`.
+  `pydantic==2.13.4` is pulled in transitively by FastAPI. `httpx2` is
+  required alongside `httpx`: this FastAPI/starlette version (`starlette==1.3.1`)
+  deprecated `httpx` as `TestClient`'s backend in favor of `httpx2` --
+  discovered as a real `StarletteDeprecationWarning` the first time
+  `TestClient` was used in Task 8, not something to have guessed upfront.
 - `GROQ_API_KEY` is read from `.env` via `python-dotenv`, same handling as
   `DATABASE_URL`: never printed, logged, or committed; only
   `.env.example` documents the variable name.
