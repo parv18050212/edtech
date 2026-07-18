@@ -227,7 +227,7 @@ Use `execute_sql` with:
 select tablename, policyname, cmd from pg_policies where tablename in ('chunks', 'chat_history', 'quiz_attempts') order by tablename, cmd;
 ```
 
-Expected: 7 policies total (1 on `chunks`, 2 on `chat_history`, 3 on `quiz_attempts`... wait, 1+2+3=6; recount: chunks=1 select, chat_history=2 (select+insert), quiz_attempts=3 (select+insert+update) = 6 policies total).
+Expected: 6 policies total (1 select on `chunks`, 2 on `chat_history` [select+insert], 3 on `quiz_attempts` [select+insert+update]).
 
 - [ ] **Step 4: Commit**
 
@@ -1104,6 +1104,8 @@ Expected: FAIL — both routes don't exist yet, so FastAPI returns `404` instead
 
 ```python
 # src/api/routes/quiz.py
+import json
+
 from fastapi import APIRouter, Depends
 
 from api.auth import get_current_user_id
@@ -1192,8 +1194,8 @@ def submit_quiz(request: QuizSubmitRequest, user_id: str = Depends(get_current_u
                     request.chapter_number,
                     request.subject,
                     request.class_,
-                    __import__("json").dumps(request.quiz_json),
-                    __import__("json").dumps(request.student_answers),
+                    json.dumps(request.quiz_json),
+                    json.dumps(request.student_answers),
                     score,
                 ),
             )
@@ -1372,16 +1374,7 @@ Expected: starts without error, listening on `http://127.0.0.1:8000`.
 
 - [ ] **Step 3: Obtain a real Supabase JWT for manual testing**
 
-Since no user exists yet, sign one up via Supabase's REST auth endpoint (this creates a real row in `auth.users` — a real, visible side effect, so confirm with the user before running):
-
-```bash
-curl -X POST "https://aedsgktxvmddarqurbhi.supabase.co/auth/v1/signup" \
-  -H "apikey: <anon/publishable key from Supabase project settings>" \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"<a test password>"}'
-```
-
-Extract `access_token` from the response — this is the bearer token for the following requests.
+Auth (sign-up/login) is owned by another developer and already implemented elsewhere — do not create test users via a raw signup API call here. Ask the user for a valid `access_token` from that existing flow (e.g. logging in through the frontend they built and copying the session token, or however they'd prefer to hand one over) before proceeding with Steps 4-7.
 
 - [ ] **Step 4: Hit the chat endpoint with a real question**
 
