@@ -75,7 +75,7 @@ edtech/
 **Interfaces:**
 - Produces: a `pytest`-discoverable project where `from ingestion import schema` (etc.) works from `tests/`, and `data/raw/Class 5 EVS.pdf` / `data/raw/Science Class 8.pdf` are the paths every later task's code and tests use.
 
-- [ ] **Step 1: Create the virtual environment and directories**
+- [x] **Step 1: Create the virtual environment and directories**
 
 ```bash
 cd "D:/Coding/edtech"
@@ -83,7 +83,7 @@ python -m venv .venv
 mkdir -p data/raw data/interim src/ingestion tests/ingestion scripts
 ```
 
-- [ ] **Step 2: Move the source PDFs into `data/raw/`**
+- [x] **Step 2: Move the source PDFs into `data/raw/`**
 
 ```bash
 git mv "Class 5 EVS.pdf" "data/raw/Class 5 EVS.pdf"
@@ -91,14 +91,14 @@ git mv "Science Class 8.pdf" "data/raw/Science Class 8.pdf"
 git mv "RAG_Learning_Platform_Study.pdf" "data/raw/RAG_Learning_Platform_Study.pdf"
 ```
 
-- [ ] **Step 3: Create `requirements.txt`**
+- [x] **Step 3: Create `requirements.txt`**
 
 ```
 pymupdf==1.28.0
 pytest==8.3.3
 ```
 
-- [ ] **Step 4: Create `pyproject.toml`**
+- [x] **Step 4: Create `pyproject.toml`**
 
 ```toml
 [tool.pytest.ini_options]
@@ -106,11 +106,11 @@ pythonpath = ["src"]
 testpaths = ["tests"]
 ```
 
-- [ ] **Step 5: Create empty package markers**
+- [x] **Step 5: Create empty package markers**
 
 Create `src/ingestion/__init__.py`, `tests/__init__.py`, and `tests/ingestion/__init__.py` (all empty files). `tests/__init__.py` is required, not optional: without it, pytest's default import mode treats `tests/ingestion` itself as the top-level `ingestion` package (since it's the first ancestor directory with an `__init__.py`), which collides with and shadows the real `src/ingestion` package in `sys.modules` — every `from ingestion.xxx import ...` in a test then fails with a confusing `ModuleNotFoundError: No module named 'ingestion.xxx'` even though `ingestion` itself imports fine.
 
-- [ ] **Step 6: Install dependencies and verify pytest collects cleanly**
+- [x] **Step 6: Install dependencies and verify pytest collects cleanly**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pip" install -r requirements.txt
@@ -119,11 +119,11 @@ Create `src/ingestion/__init__.py`, `tests/__init__.py`, and `tests/ingestion/__
 
 Expected: exits with "no tests ran" (or similar) and no import/collection errors — there are no test files yet, so this only proves the pytest/pythonpath configuration is valid.
 
-- [ ] **Step 7: Create `data/raw/.gitkeep` and `data/interim/.gitkeep`**
+- [x] **Step 7: Create `data/raw/.gitkeep` and `data/interim/.gitkeep`**
 
 Empty files, so the empty `data/interim/` directory structure is visible even though its contents are gitignored.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add data requirements.txt pyproject.toml src tests scripts
@@ -141,7 +141,7 @@ git commit -m "chore: scaffold ingestion project structure"
 **Interfaces:**
 - Produces: `ChunkRecord` dataclass with fields `chunk_id: str, board: str, class_: str, subject: str, book_title: str, chapter_number: int, chapter_name: str, topic: Optional[str], chunk_type: str, page_start: int, page_end: int, chunk_text: str`, and method `to_dict() -> dict` (serializes `class_` field as JSON key `"class"`). Used by `chunk.py` (Task 8) to build records and by `scripts/run_pilot.py` (Task 10) to serialize to JSONL.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # tests/ingestion/test_schema.py
@@ -192,7 +192,7 @@ def test_to_dict_allows_null_topic():
     assert d["topic"] is None
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/ingestion/test_schema.py -v
@@ -200,7 +200,7 @@ def test_to_dict_allows_null_topic():
 
 Expected: FAIL with `ModuleNotFoundError: No module named 'ingestion.schema'`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```python
 # src/ingestion/schema.py
@@ -229,7 +229,7 @@ class ChunkRecord:
         return d
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/ingestion/test_schema.py -v
@@ -237,7 +237,7 @@ class ChunkRecord:
 
 Expected: 2 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/ingestion/schema.py tests/ingestion/test_schema.py
@@ -256,7 +256,7 @@ git commit -m "feat: add ChunkRecord schema"
 - Consumes: nothing from earlier tasks.
 - Produces: `clean_text(text: str, boilerplate_phrases: list[str]) -> str`, used by `scripts/run_pilot.py` (Task 10) on the raw output of `extract.py` (Task 9) before structure detection (Task 4-7).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # tests/ingestion/test_clean.py
@@ -304,7 +304,7 @@ def test_normalizes_whitespace_and_hyphenation():
     assert "example of a hyphenated word split across a line." in cleaned
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/ingestion/test_clean.py -v
@@ -312,7 +312,7 @@ def test_normalizes_whitespace_and_hyphenation():
 
 Expected: FAIL with `ModuleNotFoundError: No module named 'ingestion.clean'`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```python
 # src/ingestion/clean.py
@@ -352,7 +352,7 @@ def clean_text(text: str, boilerplate_phrases: list[str]) -> str:
     return text
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/ingestion/test_clean.py -v
@@ -360,7 +360,7 @@ def clean_text(text: str, boilerplate_phrases: list[str]) -> str:
 
 Expected: 4 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/ingestion/clean.py tests/ingestion/test_clean.py
@@ -379,7 +379,7 @@ git commit -m "feat: add text cleaning (boilerplate, page numbers, whitespace)"
 - Consumes: nothing from earlier tasks.
 - Produces: `TocEntry` dataclass (`chapter_number: int, chapter_name: str, start_page: int`) and `parse_contents(contents_text: str) -> list[TocEntry]`. Used by `split_into_chapters` (Task 5) and `scripts/run_pilot.py` (Task 10).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # tests/ingestion/test_structure.py
@@ -418,7 +418,7 @@ def test_parse_contents_tolerates_bold_markers():
     assert entries[0] == TocEntry(1, "Our Earth and Our Solar System", 1)
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/ingestion/test_structure.py -v
@@ -426,7 +426,7 @@ def test_parse_contents_tolerates_bold_markers():
 
 Expected: FAIL with `ModuleNotFoundError: No module named 'ingestion.structure'`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```python
 # src/ingestion/structure.py
@@ -456,7 +456,7 @@ def parse_contents(contents_text: str) -> list[TocEntry]:
     return entries
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/ingestion/test_structure.py -v
@@ -464,7 +464,7 @@ def parse_contents(contents_text: str) -> list[TocEntry]:
 
 Expected: 3 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/ingestion/structure.py tests/ingestion/test_structure.py
@@ -483,7 +483,7 @@ git commit -m "feat: add table of contents parsing"
 - Consumes: `TocEntry` (Task 4).
 - Produces: `split_into_chapters(full_text: str, toc: list[TocEntry]) -> dict[int, str]`. Used by `scripts/run_pilot.py` (Task 10).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `tests/ingestion/test_structure.py`:
 
@@ -516,7 +516,7 @@ def test_split_into_chapters_raises_if_heading_not_found():
 
 Add `import pytest` to the top of `tests/ingestion/test_structure.py`.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/ingestion/test_structure.py -v
@@ -524,7 +524,7 @@ Add `import pytest` to the top of `tests/ingestion/test_structure.py`.
 
 Expected: FAIL with `ImportError: cannot import name 'split_into_chapters'`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Add to `src/ingestion/structure.py`:
 
@@ -555,7 +555,7 @@ def split_into_chapters(full_text: str, toc: list[TocEntry]) -> dict[int, str]:
     return chapters
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/ingestion/test_structure.py -v
@@ -563,7 +563,7 @@ def split_into_chapters(full_text: str, toc: list[TocEntry]) -> dict[int, str]:
 
 Expected: 5 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/ingestion/structure.py tests/ingestion/test_structure.py
@@ -582,7 +582,7 @@ git commit -m "feat: add chapter splitting via table of contents matching"
 - Consumes: nothing from earlier tasks (pure string classifier).
 - Produces: `classify_bold_span(text: str) -> tuple[str, str]`, returning `("topic", value)`, `("marker", chunk_type)`, or `("emphasis", text)`. Used by `segment_chapter` (Task 7).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `tests/ingestion/test_structure.py`:
 
@@ -618,7 +618,7 @@ def test_classify_bold_span(bold_text, expected):
     assert classify_bold_span(bold_text) == expected
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/ingestion/test_structure.py -v
@@ -626,7 +626,7 @@ def test_classify_bold_span(bold_text, expected):
 
 Expected: FAIL with `ImportError: cannot import name 'classify_bold_span'`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Add to `src/ingestion/structure.py`:
 
@@ -677,7 +677,7 @@ def classify_bold_span(text: str) -> tuple[str, str]:
     return ("emphasis", stripped)
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/ingestion/test_structure.py -v
@@ -685,7 +685,7 @@ def classify_bold_span(text: str) -> tuple[str, str]:
 
 Expected: 21 passed (5 previous + 16 parametrized cases).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/ingestion/structure.py tests/ingestion/test_structure.py
@@ -704,7 +704,7 @@ git commit -m "feat: classify bold spans into topics, block markers, or emphasis
 - Consumes: `classify_bold_span` (Task 6).
 - Produces: `Block` dataclass (`chunk_type: str, text: str, page_start: int, page_end: int`), `TopicSegment` dataclass (`topic: Optional[str], blocks: list[Block]`), and `segment_chapter(chapter_text: str) -> list[TopicSegment]`. Used by `build_chunk_records` (Task 8) and `scripts/run_pilot.py` (Task 10).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `tests/ingestion/test_structure.py`:
 
@@ -755,7 +755,7 @@ def test_segment_chapter_keeps_emphasis_inline():
     )
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/ingestion/test_structure.py -v
@@ -763,7 +763,7 @@ def test_segment_chapter_keeps_emphasis_inline():
 
 Expected: FAIL with `ImportError: cannot import name 'segment_chapter'`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Add to `src/ingestion/structure.py`:
 
@@ -856,7 +856,7 @@ def segment_chapter(chapter_text: str) -> list:
     return segments
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/ingestion/test_structure.py -v
@@ -864,7 +864,7 @@ def segment_chapter(chapter_text: str) -> list:
 
 Expected: 23 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/ingestion/structure.py tests/ingestion/test_structure.py
@@ -883,7 +883,7 @@ git commit -m "feat: segment chapter text into topics and typed blocks"
 - Consumes: `ChunkRecord` (Task 2), `Block` / `TopicSegment` (Task 7).
 - Produces: `estimate_tokens(text: str) -> int`, `finalize_chunk_text(text: str) -> str`, `split_paragraph(text: str, target_tokens: int = 250) -> list[str]`, `make_chunk_id(subject_code: str, class_: str, chapter_number: int, topic_index: int, seq: int) -> str`, `BookMeta` dataclass (`board: str, class_: str, subject: str, subject_code: str, book_title: str`), `build_chunk_records(book_meta: BookMeta, chapter_number: int, chapter_name: str, topic_segments: list) -> list[ChunkRecord]`. Used by `scripts/run_pilot.py` (Task 10).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # tests/ingestion/test_chunk.py
@@ -961,7 +961,7 @@ def test_build_chunk_records_splits_paragraphs_and_keeps_special_blocks_whole():
     assert records[1].chunk_id == "MSB_EVS5_CH01_TOP00_001"
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/ingestion/test_chunk.py -v
@@ -969,7 +969,7 @@ def test_build_chunk_records_splits_paragraphs_and_keeps_special_blocks_whole():
 
 Expected: FAIL with `ModuleNotFoundError: No module named 'ingestion.chunk'`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```python
 # src/ingestion/chunk.py
@@ -1082,7 +1082,7 @@ def build_chunk_records(
     return records
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/ingestion/test_chunk.py -v
@@ -1090,7 +1090,7 @@ def build_chunk_records(
 
 Expected: 7 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/ingestion/chunk.py tests/ingestion/test_chunk.py
@@ -1111,7 +1111,7 @@ git commit -m "feat: add token estimation, paragraph splitting, and chunk assemb
 
 **Note:** this task's tests run against the real PDFs in `data/raw/`, so Task 1 (which moves the PDFs there) must be complete first.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # tests/ingestion/test_extract.py
@@ -1156,7 +1156,7 @@ def test_extract_pages_wraps_bold_block_markers():
     assert "**Try this**" in text
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/ingestion/test_extract.py -v
@@ -1164,7 +1164,7 @@ def test_extract_pages_wraps_bold_block_markers():
 
 Expected: FAIL with `ModuleNotFoundError: No module named 'ingestion.extract'`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```python
 # src/ingestion/extract.py
@@ -1215,7 +1215,7 @@ def extract_pages(pdf_path: str, first_page: int, last_page: int) -> str:
         doc.close()
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/ingestion/test_extract.py -v
@@ -1223,7 +1223,7 @@ def extract_pages(pdf_path: str, first_page: int, last_page: int) -> str:
 
 Expected: 5 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/ingestion/extract.py tests/ingestion/test_extract.py
@@ -1242,7 +1242,7 @@ git commit -m "feat: add PyMuPDF extraction with reading-order sort and bold/pag
 - Consumes: `extract_pages` (Task 9), `clean_text` (Task 3), `TocEntry`/`parse_contents`/`split_into_chapters`/`segment_chapter` (Tasks 4-7), `BookMeta`/`build_chunk_records` (Task 8), `ChunkRecord.to_dict()` (Task 2).
 - Produces: `data/interim/EVS_5_ch01.jsonl`, `data/interim/SCI_8_ch01.jsonl`, and the human-reviewed `data/interim/REVIEW.md`.
 
-- [ ] **Step 1: Write `scripts/run_pilot.py`**
+- [x] **Step 1: Write `scripts/run_pilot.py`**
 
 ```python
 # scripts/run_pilot.py
@@ -1344,7 +1344,7 @@ if __name__ == "__main__":
     main()
 ```
 
-- [ ] **Step 2: Run the pilot script**
+- [x] **Step 2: Run the pilot script**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/python" scripts/run_pilot.py
@@ -1352,7 +1352,7 @@ if __name__ == "__main__":
 
 Expected: prints `data/raw/Class 5 EVS.pdf: wrote N chunks to data/interim/EVS_5_ch01.jsonl` and the equivalent line for the Science book, with no `AssertionError`. These in-script assertions are the automated half of the pilot check — they confirm every record has a valid `chunk_type` and no `[[PAGE:` or `**` artifacts leaked into `chunk_text` before any human reads the output.
 
-- [ ] **Step 3: Manually review the pilot output**
+- [x] **Step 3: Manually review the pilot output**
 
 Read `data/interim/EVS_5_ch01.jsonl` and `data/interim/SCI_8_ch01.jsonl` chunk-by-chunk (e.g. `python -c "import json; [print(json.loads(l)) for l in open('data/interim/EVS_5_ch01.jsonl', encoding='utf-8')]"`) and check each chunk against:
 
@@ -1361,11 +1361,11 @@ Read `data/interim/EVS_5_ch01.jsonl` and `data/interim/SCI_8_ch01.jsonl` chunk-b
 3. **`chunk_type` correctness** — do `activity`/`recall`/`info_box`/`exercise` chunks actually contain that kind of content, and does `paragraph` only contain narrative prose?
 4. **`topic` accuracy** — for EVS in particular, are the bold-label topics (e.g. "Stars", "Gravity") landing on the right paragraphs, or is the ≤6-word heuristic misfiring on non-topic bold text?
 
-- [ ] **Step 4: Write findings to `data/interim/REVIEW.md`**
+- [x] **Step 4: Write findings to `data/interim/REVIEW.md`**
 
 Document, for each of the two chapters reviewed: chunk count, how many chunks had reading-order problems (with 1-2 concrete examples quoted), how many had noise leakage, whether `chunk_type` classification looked correct, and whether topic detection looked correct — including specific EVS bold-label examples that worked or misfired. End with an explicit go/no-go recommendation: is the pipeline ready to run across all 44 chapters as-is, or does a specific detector (name it) need a fix first?
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add scripts/run_pilot.py data/interim/REVIEW.md
