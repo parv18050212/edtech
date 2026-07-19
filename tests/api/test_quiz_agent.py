@@ -1,10 +1,10 @@
 from api.quiz_agent import (
-    DIFFICULTIES,
-    QUESTION_TYPES,
     build_quiz_prompt,
     generate_quiz,
     quiz_schema,
+    score_answers,
 )
+from api.schemas import DIFFICULTIES, QUESTION_TYPES
 
 
 def test_question_types_and_difficulties_constants():
@@ -58,6 +58,35 @@ def test_quiz_schema_is_strict_and_covers_all_types():
     assert item["additionalProperties"] is False
     assert set(props["type"]["enum"]) == QUESTION_TYPES
     assert set(props["difficulty"]["enum"]) == {"easy", "medium", "hard"}
+
+
+def test_score_answers_exact_match():
+    quiz = [
+        {"question": "Q1", "correct_answer": "A"},
+        {"question": "Q2", "correct_answer": "B"},
+    ]
+    correct, total = score_answers(quiz, {"Q1": "A", "Q2": "C"})
+    assert (correct, total) == (1, 2)
+
+
+def test_score_answers_normalizes_case_and_whitespace():
+    # fill-in-the-blank answers should match despite case/spacing differences
+    quiz = [{"question": "Water boils at ____ C.", "correct_answer": "100"}]
+    correct, total = score_answers(quiz, {"Water boils at ____ C.": " 100 "})
+    assert (correct, total) == (1, 1)
+
+    quiz2 = [{"question": "Capital?", "correct_answer": "Mumbai"}]
+    correct2, _ = score_answers(quiz2, {"Capital?": "mumbai"})
+    assert correct2 == 1
+
+
+def test_score_answers_missing_answer_counts_as_wrong():
+    quiz = [
+        {"question": "Q1", "correct_answer": "A"},
+        {"question": "Q2", "correct_answer": "B"},
+    ]
+    correct, total = score_answers(quiz, {"Q1": "A"})
+    assert (correct, total) == (1, 2)
 
 
 def test_generate_quiz_returns_requested_count_and_type():

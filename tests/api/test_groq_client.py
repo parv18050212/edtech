@@ -55,11 +55,14 @@ def test_call_groq_gives_up_after_max_retries(monkeypatch):
 
 
 def test_call_groq_returns_text_response():
+    # Deterministic factual prompt -> robust assertion (avoids flaky
+    # exact-word matching on a non-deterministic model).
     answer = call_groq(
-        "Reply with exactly one word: hello",
+        "What is 2 + 2? Reply with just the number.",
         model="llama-3.3-70b-versatile",
     )
-    assert "hello" in answer.lower()
+    assert isinstance(answer, str) and answer.strip()
+    assert "4" in answer
 
 
 def test_call_groq_json_schema_returns_matching_shape():

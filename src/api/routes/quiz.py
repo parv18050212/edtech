@@ -4,59 +4,62 @@ from fastapi import APIRouter, Depends
 
 from api.auth import get_current_user_id
 from api.db import get_connection
-from api.groq_client import call_groq_json_schema
+from api.quiz_agent import generate_quiz as agent_generate_quiz
+from api.quiz_agent import score_answers
+from api.retrieval import search_chunks
 from api.schemas import QuizRequest, QuizResponse, QuizSubmitRequest
+from ingestion.embed import embed_query
 
 router = APIRouter()
 
-QUIZ_PROMPT_TEMPLATE = """You are a quiz generator for {subject} Class {class_}. Generate exactly 5 MCQs from the context below.
-Context: {context}
-Return valid JSON matching the required schema."""
+# When a quiz is scoped to a topic, pull the most relevant chunks within the
+# chapter rather than the whole chapter.
+TOPIC_CONTEXT_CHUNKS = 8
 
-QUIZ_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "quiz": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "question": {"type": "string"},
-                    "options": {"type": "array", "items": {"type": "string"}},
-                    "correct_answer": {"type": "string"},
-                    "difficulty": {"type": "string", "enum": ["easy", "medium", "hard"]},
-                    "explanation": {"type": "string"},
-                },
-                "required": ["question", "options", "correct_answer", "difficulty", "explanation"],
-                "additionalProperties": False,
-            },
-        },
-    },
-    "required": ["quiz"],
-    "additionalProperties": False,
-}
+
+def _chapter_context(conn, subject: str, class_: str, chapter_number: int) -> str:
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            select chunk_text from chunks
+            where subject = %s and class = %s and chapter_number = %s
+            order by id
+            """,
+            (subject, class_, chapter_number),
+        )
+        return "\n\n".join(row[0] for row in cur.fetchall())
+
+
+def _topic_context(
+    conn, subject: str, class_: str, chapter_number: int, topic: str
+) -> str:
+    query_embedding = embed_query(topic)
+    chunks = search_chunks(
+        conn, query_embedding, subject, class_, chapter_number, top_k=TOPIC_CONTEXT_CHUNKS
+    )
+    return "\n\n".join(c["chunk_text"] for c in chunks)
 
 
 @router.post("/chapters/{chapter_number}/quiz", response_model=QuizResponse)
 def generate_quiz(chapter_number: int, request: QuizRequest, user_id: str = Depends(get_current_user_id)):
     conn = get_connection()
     try:
-        with conn.cursor() as cur:
-            cur.execute(
-                """
-                select chunk_text from chunks
-                where subject = %s and class = %s and chapter_number = %s
-                order by id
-                """,
-                (request.subject, request.class_, chapter_number),
+        if request.topic:
+            context = _topic_context(
+                conn, request.subject, request.class_, chapter_number, request.topic
             )
-            context = "\n\n".join(row[0] for row in cur.fetchall())
+        else:
+            context = _chapter_context(
+                conn, request.subject, request.class_, chapter_number
+            )
 
-        prompt = QUIZ_PROMPT_TEMPLATE.format(
-            subject=request.subject, class_=request.class_, context=context
-        )
-        result = call_groq_json_schema(
-            prompt, model="openai/gpt-oss-120b", schema=QUIZ_SCHEMA, schema_name="quiz"
+        result = agent_generate_quiz(
+            context=context,
+            subject=request.subject,
+            class_=request.class_,
+            question_types=request.question_types,
+            difficulty=request.difficulty,
+            count=request.count,
         )
         return QuizResponse.model_validate(result)
     finally:
@@ -65,14 +68,8 @@ def generate_quiz(chapter_number: int, request: QuizRequest, user_id: str = Depe
 
 @router.post("/quiz/submit")
 def submit_quiz(request: QuizSubmitRequest, user_id: str = Depends(get_current_user_id)):
-    correct_answers = {
-        q["question"]: q["correct_answer"] for q in request.quiz_json.get("quiz", [])
-    }
-    score = sum(
-        1
-        for question, answer in request.student_answers.items()
-        if correct_answers.get(question) == answer
-    )
+    quiz_items = request.quiz_json.get("quiz", [])
+    score, total = score_answers(quiz_items, request.student_answers)
 
     conn = get_connection()
     try:
@@ -94,6 +91,6 @@ def submit_quiz(request: QuizSubmitRequest, user_id: str = Depends(get_current_u
                 ),
             )
         conn.commit()
-        return {"score": score, "total": len(correct_answers)}
+        return {"score": score, "total": total}
     finally:
         conn.close()
