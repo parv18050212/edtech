@@ -10,6 +10,9 @@ from api.groq_client import call_groq
 # it). gpt-oss-20b is the small/fast option and guarantees a valid label.
 INTENT_MODEL = "openai/gpt-oss-20b"
 GENERATION_MODEL = "llama-3.3-70b-versatile"
+# Structured list outputs (practice, follow-ups) also need strict
+# json_schema, so they use a gpt-oss model rather than the llama generator.
+STRUCTURED_MODEL = "openai/gpt-oss-20b"
 
 INTENTS = {"explanation", "step_by_step", "quiz", "practice"}
 
@@ -52,3 +55,47 @@ def detect_intent(question: str, api_key: Optional[str] = None) -> str:
         _INTENT_PROMPT.format(question=question)
     )
     return json.loads(message.content)["intent"]
+
+
+_STEP_BY_STEP_PROMPT = """You are a patient tutor. Using ONLY the context below, solve the student's problem as a clear numbered list of steps, showing the reasoning and any calculation at each step, then state the final answer on its own line.
+
+Context:
+{context}
+
+Problem: {question}"""
+
+_PRACTICE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "questions": {"type": "array", "items": {"type": "string"}},
+    },
+    "required": ["questions"],
+    "additionalProperties": False,
+}
+
+_PRACTICE_PROMPT = """You are a tutor. Using ONLY the context below, write 3 open-ended practice questions (no options, no answers) that let a student practise this topic. Base every question on the context; do not invent facts.
+
+Context:
+{context}
+
+Topic / request: {question}
+
+Return JSON with a "questions" array of strings."""
+
+
+def generate_step_by_step(question: str, context: str) -> str:
+    prompt = _STEP_BY_STEP_PROMPT.format(context=context, question=question)
+    return call_groq(prompt, model=GENERATION_MODEL)
+
+
+def generate_practice(
+    question: str, context: str, api_key: Optional[str] = None
+) -> list[str]:
+    response_format = {
+        "type": "json_schema",
+        "json_schema": {"name": "practice", "strict": True, "schema": _PRACTICE_SCHEMA},
+    }
+    message = _groq(STRUCTURED_MODEL, api_key, response_format).invoke(
+        _PRACTICE_PROMPT.format(context=context, question=question)
+    )
+    return json.loads(message.content)["questions"]
