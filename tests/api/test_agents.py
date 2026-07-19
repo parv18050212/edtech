@@ -1,6 +1,7 @@
 from api.agents import (
     INTENTS,
     detect_intent,
+    generate_follow_ups,
     generate_practice,
     generate_step_by_step,
 )
@@ -47,4 +48,11 @@ def test_generate_practice_returns_list_of_questions():
     out = generate_practice("Give me practice questions on atoms", _ATOM_CONTEXT)
     assert isinstance(out, list)
     assert 1 <= len(out) <= 10
+    assert all(isinstance(q, str) and q.strip() for q in out)
+
+
+def test_generate_follow_ups_returns_questions():
+    out = generate_follow_ups("What is a star?", _ATOM_CONTEXT)
+    assert isinstance(out, list)
+    assert 1 <= len(out) <= 5
     assert all(isinstance(q, str) and q.strip() for q in out)

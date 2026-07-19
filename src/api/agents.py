@@ -99,3 +99,35 @@ def generate_practice(
         _PRACTICE_PROMPT.format(context=context, question=question)
     )
     return json.loads(message.content)["questions"]
+
+
+_FOLLOW_UP_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "questions": {"type": "array", "items": {"type": "string"}},
+    },
+    "required": ["questions"],
+    "additionalProperties": False,
+}
+
+_FOLLOW_UP_PROMPT = """A student asked: "{question}"
+
+Based on the context below, suggest exactly 3 natural follow-up questions the student might ask next to deepen their understanding. Keep them short.
+
+Context:
+{context}
+
+Return JSON with a "questions" array of 3 strings."""
+
+
+def generate_follow_ups(
+    question: str, context: str, api_key: Optional[str] = None
+) -> list[str]:
+    response_format = {
+        "type": "json_schema",
+        "json_schema": {"name": "followups", "strict": True, "schema": _FOLLOW_UP_SCHEMA},
+    }
+    message = _groq(STRUCTURED_MODEL, api_key, response_format).invoke(
+        _FOLLOW_UP_PROMPT.format(context=context, question=question)
+    )
+    return json.loads(message.content)["questions"]
