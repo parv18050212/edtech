@@ -77,8 +77,8 @@ def submit_quiz(request: QuizSubmitRequest, user_id: str = Depends(get_current_u
             cur.execute(
                 """
                 insert into quiz_attempts
-                    (user_id, chapter_number, subject, class, quiz_json, student_answers, score)
-                values (%s, %s, %s, %s, %s, %s, %s)
+                    (user_id, chapter_number, subject, class, quiz_json, student_answers, score, total)
+                values (%s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 (
                     user_id,
@@ -88,6 +88,7 @@ def submit_quiz(request: QuizSubmitRequest, user_id: str = Depends(get_current_u
                     json.dumps(request.quiz_json),
                     json.dumps(request.student_answers),
                     score,
+                    total,
                 ),
             )
         conn.commit()

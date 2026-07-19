@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from api.auth import get_current_user_id
 from api.db import get_connection
+from api.progress_service import get_quiz_progress
 
 router = APIRouter()
 
@@ -23,13 +24,19 @@ def get_progress(user_id: str, current_user_id: str = Depends(get_current_user_i
             chat = [dict(zip(chat_columns, row)) for row in cur.fetchall()]
 
             cur.execute(
-                "select chapter_number, subject, score, attempted_at "
+                "select chapter_number, subject, score, total, attempted_at "
                 "from quiz_attempts where user_id = %s order by attempted_at desc limit 20",
                 (user_id,),
             )
             quiz_columns = [d[0] for d in cur.description]
             quizzes = [dict(zip(quiz_columns, row)) for row in cur.fetchall()]
 
-        return {"chat_history": chat, "quiz_attempts": quizzes}
+        quiz_progress = get_quiz_progress(conn, user_id)
+
+        return {
+            "chat_history": chat,
+            "quiz_attempts": quizzes,
+            "quiz_progress": quiz_progress,
+        }
     finally:
         conn.close()
