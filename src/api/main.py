@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.routes import catalog, chat, progress, quiz
+from api.routes import ask, catalog, chat, progress, quiz
 
 app = FastAPI(title="RAG Learning Platform API")
 
@@ -20,3 +20,4 @@ app.include_router(catalog.router)
 app.include_router(chat.router)
 app.include_router(quiz.router)
 app.include_router(progress.router)
+app.include_router(ask.router)
