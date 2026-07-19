@@ -51,7 +51,7 @@ edtech/
 **Interfaces:**
 - Produces: `langgraph` importable for later tasks.
 
-- [ ] **Step 1: Add langgraph to `requirements.txt`**
+- [x] **Step 1: Add langgraph to `requirements.txt`**
 
 Append this line to `requirements.txt` (after `langchain-groq==0.2.5`):
 
@@ -59,7 +59,7 @@ Append this line to `requirements.txt` (after `langchain-groq==0.2.5`):
 langgraph==0.2.76
 ```
 
-- [ ] **Step 2: Install and verify**
+- [x] **Step 2: Install and verify**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pip" install -r requirements.txt
@@ -68,7 +68,7 @@ langgraph==0.2.76
 
 Expected: prints `ok`.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add requirements.txt
@@ -87,7 +87,7 @@ git commit -m "chore: add langgraph dependency"
 - Consumes: nothing from earlier tasks (uses `langchain_groq.ChatGroq`).
 - Produces: `INTENTS: set[str]` (`{"explanation", "step_by_step", "quiz", "practice"}`), `detect_intent(question: str, api_key: Optional[str] = None) -> str` returning one of `INTENTS`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # tests/api/test_agents.py
@@ -116,7 +116,7 @@ def test_detect_intent_practice():
     assert detect_intent("Give me some practice questions on atoms") == "practice"
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/api/test_agents.py -v
@@ -124,7 +124,7 @@ def test_detect_intent_practice():
 
 Expected: FAIL with `ModuleNotFoundError: No module named 'api.agents'`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```python
 # src/api/agents.py
@@ -181,7 +181,7 @@ def detect_intent(question: str, api_key: Optional[str] = None) -> str:
     return json.loads(message.content)["intent"]
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/api/test_agents.py -v
@@ -189,7 +189,7 @@ def detect_intent(question: str, api_key: Optional[str] = None) -> str:
 
 Expected: 5 passed. (Real Groq calls; requires `GROQ_API_KEY` in `.env`.)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/api/agents.py tests/api/test_agents.py
@@ -208,7 +208,7 @@ git commit -m "feat: add intent classifier"
 - Consumes: `call_groq` (via existing import), `_groq` helper (Task 2).
 - Produces: `generate_step_by_step(question: str, context: str) -> str`; `generate_practice(question: str, context: str, api_key: Optional[str] = None) -> list[str]`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `tests/api/test_agents.py`:
 
@@ -238,7 +238,7 @@ def test_generate_practice_returns_list_of_questions():
     assert all(isinstance(q, str) and q.strip() for q in out)
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/api/test_agents.py -k "step_by_step or practice" -v
@@ -246,7 +246,7 @@ def test_generate_practice_returns_list_of_questions():
 
 Expected: FAIL with `ImportError: cannot import name 'generate_step_by_step'`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Append to `src/api/agents.py`:
 
@@ -295,7 +295,7 @@ def generate_practice(
     return json.loads(message.content)["questions"]
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/api/test_agents.py -k "step_by_step or practice" -v
@@ -303,7 +303,7 @@ def generate_practice(
 
 Expected: 2 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/api/agents.py tests/api/test_agents.py
@@ -322,7 +322,7 @@ git commit -m "feat: add step-by-step and practice generators"
 - Consumes: `_groq` helper (Task 2).
 - Produces: `generate_follow_ups(question: str, context: str, api_key: Optional[str] = None) -> list[str]`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `tests/api/test_agents.py`:
 
@@ -337,7 +337,7 @@ def test_generate_follow_ups_returns_questions():
     assert all(isinstance(q, str) and q.strip() for q in out)
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/api/test_agents.py -k follow_ups -v
@@ -345,7 +345,7 @@ def test_generate_follow_ups_returns_questions():
 
 Expected: FAIL with `ImportError: cannot import name 'generate_follow_ups'`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Append to `src/api/agents.py`:
 
@@ -382,7 +382,7 @@ def generate_follow_ups(
     return json.loads(message.content)["questions"]
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/api/test_agents.py -k follow_ups -v
@@ -390,7 +390,7 @@ def generate_follow_ups(
 
 Expected: 1 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/api/agents.py tests/api/test_agents.py
@@ -409,7 +409,7 @@ git commit -m "feat: add follow-up questions generator"
 - Consumes: existing `QuizQuestion`.
 - Produces: `AskResponse` with fields `intent: str`, `explanation: Optional[str] = None`, `step_by_step: Optional[str] = None`, `quiz: Optional[list[QuizQuestion]] = None`, `practice_questions: Optional[list[str]] = None`, `follow_up_questions: list[str]`, `source_chunk_ids: list[str]`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `tests/api/test_schemas.py`:
 
@@ -432,7 +432,7 @@ def test_ask_response_populates_only_relevant_field():
     assert resp.follow_up_questions == ["What is a planet?"]
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/api/test_schemas.py -k ask_response -v
@@ -440,7 +440,7 @@ def test_ask_response_populates_only_relevant_field():
 
 Expected: FAIL with `ImportError: cannot import name 'AskResponse'`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Add to `src/api/schemas.py` (after `QuizResponse`):
 
@@ -455,7 +455,7 @@ class AskResponse(BaseModel):
     source_chunk_ids: list[str]
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/api/test_schemas.py -k ask_response -v
@@ -463,7 +463,7 @@ class AskResponse(BaseModel):
 
 Expected: 1 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/api/schemas.py tests/api/test_schemas.py
@@ -482,7 +482,7 @@ git commit -m "feat: add AskResponse schema"
 - Consumes: `detect_intent`, `generate_step_by_step`, `generate_practice`, `generate_follow_ups` (Tasks 2-4); `embed_query`; `search_chunks`; `quiz_agent.generate_quiz`; `EXPLANATION_PROMPT_TEMPLATE`; `call_groq`.
 - Produces: `OrchestratorState` (TypedDict); `build_orchestrator(conn)` returning a compiled graph whose `.invoke(state)` fills the output fields; `run_ask(conn, question, subject, class_, chapter_number) -> dict` convenience wrapper returning the final state.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # tests/api/test_orchestrator.py
@@ -543,7 +543,7 @@ def test_run_ask_quiz_populates_quiz():
     assert len(state["follow_up_questions"]) >= 1
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/api/test_orchestrator.py -v
@@ -551,7 +551,7 @@ def test_run_ask_quiz_populates_quiz():
 
 Expected: FAIL with `ModuleNotFoundError: No module named 'api.orchestrator'`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```python
 # src/api/orchestrator.py
@@ -690,7 +690,7 @@ def run_ask(
     return graph.invoke(initial)
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/api/test_orchestrator.py -v
@@ -698,7 +698,7 @@ def run_ask(
 
 Expected: 2 passed. (Real Groq + real DB; a few LLM calls per question, allow ~30-60s.)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/api/orchestrator.py tests/api/test_orchestrator.py
@@ -718,7 +718,7 @@ git commit -m "feat: add LangGraph orchestrator (intent -> retrieve -> route -> 
 - Consumes: `run_ask` (Task 6); `AskResponse` (Task 5); `ChatRequest` (existing, reused for the body); `get_current_user_id`; `get_connection`.
 - Produces: `POST /chapters/{chapter_number}/ask`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```python
 # tests/api/test_ask_route.py
@@ -746,7 +746,7 @@ def test_ask_rejects_invalid_token():
     assert response.status_code == 401
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/api/test_ask_route.py -v
@@ -754,7 +754,7 @@ def test_ask_rejects_invalid_token():
 
 Expected: FAIL — route missing, returns `404` instead of `401`/`422`.
 
-- [ ] **Step 3: Write `src/api/routes/ask.py`**
+- [x] **Step 3: Write `src/api/routes/ask.py`**
 
 ```python
 # src/api/routes/ask.py
@@ -825,7 +825,7 @@ def ask(chapter_number: int, request: ChatRequest, user_id: str = Depends(get_cu
         conn.close()
 ```
 
-- [ ] **Step 4: Register the router in `src/api/main.py`**
+- [x] **Step 4: Register the router in `src/api/main.py`**
 
 Update the imports and registrations in `src/api/main.py` so it reads:
 
@@ -852,7 +852,7 @@ app.include_router(progress.router)
 app.include_router(ask.router)
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" tests/api/test_ask_route.py -v
@@ -860,7 +860,7 @@ app.include_router(ask.router)
 
 Expected: 2 passed.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/api/routes/ask.py src/api/main.py tests/api/test_ask_route.py
@@ -873,7 +873,7 @@ git commit -m "feat: add /ask orchestrator endpoint"
 
 **Files:** none (verification only).
 
-- [ ] **Step 1: Run the full test suite**
+- [x] **Step 1: Run the full test suite**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/pytest" -q
@@ -881,7 +881,7 @@ git commit -m "feat: add /ask orchestrator endpoint"
 
 Expected: all tests pass (112 before this plan + the new agent/orchestrator/ask/schema tests).
 
-- [ ] **Step 2: Start the server**
+- [x] **Step 2: Start the server**
 
 ```bash
 "D:/Coding/edtech/.venv/Scripts/uvicorn" api.main:app --app-dir src --port 8000
@@ -889,7 +889,7 @@ Expected: all tests pass (112 before this plan + the new agent/orchestrator/ask/
 
 Expected: starts cleanly.
 
-- [ ] **Step 3: Drive `/ask` with a real token (needs a Supabase JWT)**
+- [x] **Step 3: Drive `/ask` with a real token (needs a Supabase JWT)**
 
 Auth is owned by the other developer; ask the user for a valid `access_token` from the existing login flow. Then, for each intent, confirm the right field is populated:
 
@@ -910,7 +910,7 @@ curl -s -X POST "http://127.0.0.1:8000/chapters/1/ask" -H "Authorization: Bearer
 
 Expected: each response has the correct `intent`, the matching populated field, a non-empty `follow_up_questions`, and `source_chunk_ids` prefixed for the requested chapter.
 
-- [ ] **Step 4: Report results to the user**
+- [x] **Step 4: Report results to the user**
 
 Summarize test status and a sample of each intent's real output. No commit (verification only).
 
