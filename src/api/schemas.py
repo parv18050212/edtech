@@ -67,6 +67,16 @@ class QuizResponse(BaseModel):
     quiz: list[QuizQuestion]
 
 
+class AskResponse(BaseModel):
+    intent: str
+    explanation: Optional[str] = None
+    step_by_step: Optional[str] = None
+    quiz: Optional[list[QuizQuestion]] = None
+    practice_questions: Optional[list[str]] = None
+    follow_up_questions: list[str]
+    source_chunk_ids: list[str]
+
+
 class QuizSubmitRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 

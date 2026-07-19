@@ -88,3 +88,20 @@ def test_quiz_question_has_type_field_and_allows_empty_options():
     )
     assert q.type == "fill_in_the_blank"
     assert q.options == []
+
+
+def test_ask_response_populates_only_relevant_field():
+    from api.schemas import AskResponse
+
+    resp = AskResponse(
+        intent="explanation",
+        explanation="A star is a ball of gas.",
+        follow_up_questions=["What is a planet?"],
+        source_chunk_ids=["MSB_EVS5_CH01_TOP00_000"],
+    )
+    assert resp.intent == "explanation"
+    assert resp.explanation == "A star is a ball of gas."
+    assert resp.step_by_step is None
+    assert resp.quiz is None
+    assert resp.practice_questions is None
+    assert resp.follow_up_questions == ["What is a planet?"]
