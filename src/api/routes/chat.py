@@ -9,10 +9,19 @@ from ingestion.embed import embed_query
 
 router = APIRouter()
 
-EXPLANATION_PROMPT_TEMPLATE = """You are a helpful tutor. Answer using ONLY the context below.
-Context: {context}
-Student question: {question}
-Provide: a simple explanation, one worked example, and one common mistake students make."""
+EXPLANATION_PROMPT_TEMPLATE = """You are a helpful tutor for a school student.
+
+Answer the student's question using ONLY the information in the context below. Follow these rules strictly:
+- Use only facts that are stated in or directly supported by the context.
+- Do NOT add any facts, figures, examples, or claims that are not in the context.
+- If the context does not contain enough information to answer, say so plainly instead of guessing.
+- Write a clear, simple explanation in your own words, appropriate for the student's level.
+- You may include an example or point out a common misconception ONLY if it is supported by the context; otherwise leave it out.
+
+Context:
+{context}
+
+Student question: {question}"""
 
 
 @router.post("/chapters/{chapter_number}/chat", response_model=ChatResponse)

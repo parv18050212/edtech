@@ -174,6 +174,39 @@ textbook.
 
 ---
 
+## 6a. Faithfulness fix (applied)
+
+The faithfulness recommendation below was acted on. The original
+explanation prompt said *"Answer using ONLY the context"* but then forced
+*"one worked example, and one common mistake students make"* — content the
+retrieved textbook chunk usually does not contain, so the model invented
+it. The prompt (`EXPLANATION_PROMPT_TEMPLATE`, used by both `/chat` and the
+orchestrator's explanation path) was rewritten to:
+
+- ground every claim strictly in the context,
+- explicitly forbid adding facts/figures/examples not in the context,
+- make any example or misconception *conditional* on being supported by the
+  context, and
+- say so plainly when the context is insufficient rather than guessing.
+
+Measured before/after on four questions (local llama3.1:8b generation +
+judge, `scripts/compare_faithfulness.py`):
+
+| Question | Old → New |
+|---|---|
+| Sources of water | 0.33 → 1.00 |
+| Constituents of food | 0.72 → 0.91 |
+| Five kingdoms | 0.91 → 1.00 |
+| Sub-atomic particles | 0.71 → 0.33 |
+| **Mean** | **0.67 → 0.81** |
+
+Three of four improved sharply (the previously-worst question reached a
+perfect score); mean faithfulness rose ~21% relative. One question
+regressed; on a local 8B judge, faithfulness scoring is high-variance
+(answer-statement decomposition differs run to run), so against a clear
+mean gain this reads as judge noise rather than a real regression — worth
+re-checking if it persists.
+
 ## 7. Recommendations
 
 | Priority | Action | Rationale |
