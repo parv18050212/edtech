@@ -1,4 +1,3 @@
-import json
 import os
 import time
 from typing import Optional
@@ -43,29 +42,3 @@ def call_groq(prompt: str, model: str, api_key: Optional[str] = None) -> str:
         {"model": model, "messages": [{"role": "user", "content": prompt}]}, api_key
     )
     return response.json()["choices"][0]["message"]["content"]
-
-
-def call_groq_json_schema(
-    prompt: str,
-    model: str,
-    schema: dict,
-    schema_name: str,
-    api_key: Optional[str] = None,
-) -> dict:
-    response = _post_with_retry(
-        {
-            "model": model,
-            "messages": [{"role": "user", "content": prompt}],
-            "response_format": {
-                "type": "json_schema",
-                "json_schema": {
-                    "name": schema_name,
-                    "strict": True,
-                    "schema": schema,
-                },
-            },
-        },
-        api_key,
-    )
-    content = response.json()["choices"][0]["message"]["content"]
-    return json.loads(content)

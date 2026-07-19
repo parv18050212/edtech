@@ -1,5 +1,5 @@
 import api.groq_client as groq_client
-from api.groq_client import call_groq, call_groq_json_schema
+from api.groq_client import call_groq
 
 
 class _FakeResponse:
@@ -63,22 +63,3 @@ def test_call_groq_returns_text_response():
     )
     assert isinstance(answer, str) and answer.strip()
     assert "4" in answer
-
-
-def test_call_groq_json_schema_returns_matching_shape():
-    schema = {
-        "type": "object",
-        "properties": {
-            "greeting": {"type": "string"},
-        },
-        "required": ["greeting"],
-        "additionalProperties": False,
-    }
-    result = call_groq_json_schema(
-        "Return a JSON object with a 'greeting' field containing the word hello.",
-        model="openai/gpt-oss-120b",
-        schema=schema,
-        schema_name="greeting_response",
-    )
-    assert "greeting" in result
-    assert isinstance(result["greeting"], str)
